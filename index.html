@@ -103,7 +103,7 @@
   .preview-wrap{display:flex;flex-direction:column;justify-content:space-between;}
   .preview-stage{
     flex:1;
-    background:repeating-conic-gradient(#1a2026 0% 25%,#161b20 0% 50%) 50%/22px 22px;
+    background:var(--bg-1);
     border:1px solid var(--line);border-radius:14px;padding:50px 24px;
     display:flex;align-items:center;justify-content:center;
     min-height:240px;overflow:hidden;
@@ -149,7 +149,7 @@
       <!-- ordered by hue along the color spectrum: red → orange/yellow → green → teal/blue → purple → pink
            4 originally-light colors were darkened so white badge text stays readable on every swatch:
            fb923c→c2410c, facc15→a16207, 84cc16→4d7c0f, 6fe3ff→0369a1 -->
-      <div class="swatch" style="background:#dc2626" data-color="#dc2626" title="紅"></div>
+      <div class="swatch active" style="background:#dc2626" data-color="#dc2626" title="紅"></div>
       <div class="swatch" style="background:#c2410c" data-color="#c2410c" title="磚紅"></div>
       <div class="swatch" style="background:#92400e" data-color="#92400e" title="棕褐"></div>
       <div class="swatch" style="background:#f97316" data-color="#f97316" title="橙"></div>
@@ -172,7 +172,7 @@
       <div class="swatch" style="background:#2563eb" data-color="#2563eb" title="藍"></div>
       <div class="swatch" style="background:#6366f1" data-color="#6366f1" title="紫藍"></div>
       <div class="swatch" style="background:#4f46e5" data-color="#4f46e5" title="靛藍"></div>
-      <div class="swatch active" style="background:#7c3aed" data-color="#7c3aed" title="紫"></div>
+      <div class="swatch" style="background:#7c3aed" data-color="#7c3aed" title="紫"></div>
       <div class="swatch" style="background:#a855f7" data-color="#a855f7" title="淺紫"></div>
       <div class="swatch" style="background:#9333ea" data-color="#9333ea" title="亮紫"></div>
       <div class="swatch" style="background:#ec4899" data-color="#ec4899" title="桃紅"></div>
@@ -222,7 +222,7 @@ const TEXT_MAX = 100;  /* Dialog  */
 nameInput.maxLength = NAME_MAX;
 textInput.maxLength = TEXT_MAX;
 
-let accentColor = '#7c3aed';
+let accentColor = '#dc2626';
 let badgeOnLeft = true;
 
 /* ── roundRect helper ── */
@@ -292,7 +292,7 @@ function draw() {
 
   const BH  = 68;    /* badge height     */
   const BR  = 34;    /* badge radius     */
-  const BFS = 28;    /* badge font size  */
+  const BFS = 32;    /* badge font size  */
   const BPX = 40;    /* badge x-padding  */
 
   const OVL = 24;    /* badge↔dialog vertical overlap */
@@ -396,8 +396,8 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
 /* ── init ── */
 if (document.fonts) {
   Promise.all([
-    document.fonts.load('700 40px Inter'),
-    document.fonts.load('700 28px Inter'),
+    document.fonts.load('700 36px Inter'),
+    document.fonts.load('700 36px Inter'),
   ]).then(draw).catch(draw);
 } else {
   draw();
