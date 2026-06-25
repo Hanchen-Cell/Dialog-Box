@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dialog Box</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-0:#0b0d10;--bg-1:#11151a;--panel:#161b21;--panel-2:#1c222a;
+    --line:#262e38;--text-0:#eef2f6;--text-1:#9aa5b1;--accent:#6fe3ff;
+    --mono:'JetBrains Mono','SF Mono',Consolas,monospace;
+    --sans:'Inter',-apple-system,'Helvetica Neue',sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 15% 0%,rgba(111,227,255,0.07),transparent 45%),
+      radial-gradient(circle at 90% 100%,rgba(111,227,255,0.05),transparent 40%),
+      var(--bg-0);
+    color:var(--text-0);font-family:var(--sans);min-height:100vh;
+    display:flex;flex-direction:column;align-items:center;padding:40px 20px 80px;
+  }
+  .top{width:100%;max-width:980px;text-align:left;margin-bottom:20px;}
+  .eyebrow{
+    font-family:var(--mono);font-size:11px;letter-spacing:0.18em;
+    color:var(--accent);text-transform:uppercase;margin:0;
+    display:flex;align-items:center;gap:8px;
+  }
+  .eyebrow::before{
+    content:'';width:6px;height:6px;background:var(--accent);
+    border-radius:50%;box-shadow:0 0 8px var(--accent);
+  }
+  .layout{width:100%;max-width:980px;display:grid;grid-template-columns:360px 1fr;gap:24px;}
+  @media(max-width:800px){.layout{grid-template-columns:1fr;}}
+  .card{
+    background:linear-gradient(180deg,var(--panel),var(--panel-2));
+    border:1px solid var(--line);border-radius:16px;padding:24px;
+  }
+  .field{margin-bottom:18px;}
+  .field:last-child{margin-bottom:0;}
+  label{
+    display:block;font-size:12px;font-family:var(--mono);letter-spacing:0.06em;
+    color:var(--text-1);text-transform:uppercase;margin-bottom:8px;
+  }
+  input[type=text]{
+    width:100%;background:var(--bg-1);border:1px solid var(--line);
+    border-radius:10px;padding:11px 13px;color:var(--text-0);
+    font-size:15px;font-family:var(--sans);outline:none;
+    transition:border-color .15s ease,box-shadow .15s ease;
+  }
+  input[type=text]::placeholder{color:#566270;}
+  input[type=text]:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(111,227,255,0.12);}
+  .divider{height:1px;background:var(--line);margin:20px 0;}
+  .opt-label{
+    font-size:12px;font-family:var(--mono);letter-spacing:0.06em;
+    color:var(--text-1);text-transform:uppercase;margin-bottom:10px;display:block;
+  }
+  /* swatches only — no color picker box */
+  .swatches{display:grid;grid-template-columns:repeat(10,1fr);gap:6px;}
+  .swatch{
+    width:100%;aspect-ratio:1/1;border-radius:6px;cursor:pointer;
+    border:2px solid transparent;position:relative;
+    transition:transform .12s ease,border-color .12s ease;
+  }
+  .swatch:hover{transform:translateY(-2px);}
+  .swatch.active{border-color:var(--accent);}
+  .swatch.active::after{
+    content:'';position:absolute;inset:-2px;border-radius:8px;
+    box-shadow:0 0 0 1px var(--accent);
+  }
+  /* position toggle */
+  .toggle-row{display:flex;gap:8px;margin-top:10px;}
+  .pos-btn{
+    flex:1;padding:9px 8px;border-radius:8px;
+    border:1px solid var(--line);background:var(--bg-1);
+    color:var(--text-1);font-family:var(--mono);font-size:11px;
+    letter-spacing:0.06em;cursor:pointer;text-transform:uppercase;
+    transition:all .12s ease;text-align:center;
+  }
+  .pos-btn:hover{border-color:var(--text-1);color:var(--text-0);}
+  .pos-btn.active{
+    border-color:var(--accent);color:var(--accent);
+    box-shadow:0 0 0 1px rgba(111,227,255,0.2);
+  }
+  /* main button */
+  .btn{
+    width:100%;padding:13px 16px;border-radius:10px;border:none;
+    font-family:var(--sans);font-weight:600;font-size:14px;cursor:pointer;
+    letter-spacing:0.01em;
+    transition:transform .12s ease,box-shadow .12s ease,opacity .12s ease;
+  }
+  .btn-primary{
+    background:linear-gradient(180deg,#8aebff,var(--accent));
+    color:#072026;box-shadow:0 6px 20px rgba(111,227,255,0.25);
+  }
+  .btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(111,227,255,0.35);}
+  .btn-primary:active{transform:translateY(0);}
+  .actions{margin-top:18px;}
+  /* preview */
+  .preview-wrap{display:flex;flex-direction:column;justify-content:space-between;}
+  .preview-stage{
+    flex:1;
+    background:repeating-conic-gradient(#1a2026 0% 25%,#161b20 0% 50%) 50%/22px 22px;
+    border:1px solid var(--line);border-radius:14px;padding:50px 24px;
+    display:flex;align-items:center;justify-content:center;
+    min-height:240px;overflow:hidden;
+  }
+  canvas#dialogCanvas{
+    max-width:100%;max-height:100%;height:auto;width:auto;
+    min-width:0;display:block;
+    filter:drop-shadow(0 12px 32px rgba(0,0,0,0.6));
+  }
+  .preview-foot{
+    width:100%;display:flex;align-items:center;
+    justify-content:space-between;margin-top:14px;
+    font-size:12px;color:var(--text-1);font-family:var(--mono);
+  }
+  .dim-tag{
+    background:var(--bg-1);border:1px solid var(--line);
+    border-radius:6px;padding:4px 9px;font-size:11px;
+  }
+  footer{color:#3e4754;font-size:11px;font-family:var(--mono);margin-top:40px;text-align:center;}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <p class="eyebrow">Dialog Box</p>
+</div>
+
+<div class="layout">
+  <div class="card">
+    <div class="field">
+      <label for="nameInput">Speaker</label>
+      <input type="text" id="nameInput" placeholder="請輸入SPEAKER" maxlength="20">
+    </div>
+    <div class="field">
+      <label for="textInput">Dialog</label>
+      <input type="text" id="textInput" placeholder="請輸入DIALOG" maxlength="100">
+    </div>
+
+    <div class="divider"></div>
+
+    <span class="opt-label">主色調</span>
+    <div class="swatches" id="swatchGrid">
+      <!-- ordered by hue along the color spectrum: red → orange/yellow → green → teal/blue → purple → pink
+           4 originally-light colors were darkened so white badge text stays readable on every swatch:
+           fb923c→c2410c, facc15→a16207, 84cc16→4d7c0f, 6fe3ff→0369a1 -->
+      <div class="swatch" style="background:#dc2626" data-color="#dc2626" title="紅"></div>
+      <div class="swatch" style="background:#c2410c" data-color="#c2410c" title="磚紅"></div>
+      <div class="swatch" style="background:#92400e" data-color="#92400e" title="棕褐"></div>
+      <div class="swatch" style="background:#f97316" data-color="#f97316" title="橙"></div>
+      <div class="swatch" style="background:#d97706" data-color="#d97706" title="橘"></div>
+      <div class="swatch" style="background:#a16207" data-color="#a16207" title="深黃"></div>
+      <div class="swatch" style="background:#ca8a04" data-color="#ca8a04" title="金黃"></div>
+      <div class="swatch" style="background:#4d7c0f" data-color="#4d7c0f" title="橄欖綠"></div>
+      <div class="swatch" style="background:#16a34a" data-color="#16a34a" title="綠"></div>
+      <div class="swatch" style="background:#166534" data-color="#166534" title="墨綠"></div>
+      <div class="swatch" style="background:#10b981" data-color="#10b981" title="薄荷綠"></div>
+      <div class="swatch" style="background:#059669" data-color="#059669" title="翠綠"></div>
+      <div class="swatch" style="background:#14b8a6" data-color="#14b8a6" title="青綠"></div>
+      <div class="swatch" style="background:#0891b2" data-color="#0891b2" title="青"></div>
+      <div class="swatch" style="background:#0ea5e9" data-color="#0ea5e9" title="天藍"></div>
+      <div class="swatch" style="background:#0369a1" data-color="#0369a1" title="湖水藍"></div>
+      <div class="swatch" style="background:#334155" data-color="#334155" title="鐵灰"></div>
+      <div class="swatch" style="background:#64748b" data-color="#64748b" title="石板灰"></div>
+      <div class="swatch" style="background:#78716c" data-color="#78716c" title="暖灰"></div>
+      <div class="swatch" style="background:#1e293b" data-color="#1e293b" title="深夜藍"></div>
+      <div class="swatch" style="background:#2563eb" data-color="#2563eb" title="藍"></div>
+      <div class="swatch" style="background:#6366f1" data-color="#6366f1" title="紫藍"></div>
+      <div class="swatch" style="background:#4f46e5" data-color="#4f46e5" title="靛藍"></div>
+      <div class="swatch active" style="background:#7c3aed" data-color="#7c3aed" title="紫"></div>
+      <div class="swatch" style="background:#a855f7" data-color="#a855f7" title="淺紫"></div>
+      <div class="swatch" style="background:#9333ea" data-color="#9333ea" title="亮紫"></div>
+      <div class="swatch" style="background:#ec4899" data-color="#ec4899" title="桃紅"></div>
+      <div class="swatch" style="background:#db2777" data-color="#db2777" title="粉紅"></div>
+      <div class="swatch" style="background:#e11d48" data-color="#e11d48" title="玫紅"></div>
+      <div class="swatch" style="background:#f43f5e" data-color="#f43f5e" title="珊瑚紅"></div>
+    </div>
+
+    <div class="divider"></div>
+
+    <span class="opt-label">Speaker 位置</span>
+    <div class="toggle-row">
+      <button class="pos-btn active" id="posLeft">◀ 左側</button>
+      <button class="pos-btn" id="posRight">右側 ▶</button>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-primary" id="downloadBtn">下載圖片檔案</button>
+    </div>
+  </div>
+
+  <div class="card preview-wrap">
+    <div class="preview-stage">
+      <canvas id="dialogCanvas"></canvas>
+    </div>
+    <div class="preview-foot">
+      <span id="dimsTag" class="dim-tag">— × —</span>
+      <span>即時預覽 · 透明背景</span>
+    </div>
+  </div>
+</div>
+
+<footer>RENDERED ON CANVAS · NO SERVER · PNG / ALPHA</footer>
+
+<script>
+const canvas    = document.getElementById('dialogCanvas');
+const ctx       = canvas.getContext('2d');
+const nameInput = document.getElementById('nameInput');
+const textInput = document.getElementById('textInput');
+const dimsTag   = document.getElementById('dimsTag');
+
+/* single source of truth for character limits — used for both the
+   input-level enforcement below and the draw()-time clamp further down */
+const NAME_MAX = 20;   /* Speaker */
+const TEXT_MAX = 100;  /* Dialog  */
+
+nameInput.maxLength = NAME_MAX;
+textInput.maxLength = TEXT_MAX;
+
+let accentColor = '#7c3aed';
+let badgeOnLeft = true;
+
+/* ── roundRect helper ── */
+function rrect(c, x, y, w, h, r) {
+  c.beginPath();
+  c.moveTo(x+r, y);
+  c.arcTo(x+w, y,   x+w, y+h, r);
+  c.arcTo(x+w, y+h, x,   y+h, r);
+  c.arcTo(x,   y+h, x,   y,   r);
+  c.arcTo(x,   y,   x+w, y,   r);
+  c.closePath();
+}
+
+/* ── dedicated measure canvas, identity transform, never drawn on ── */
+const mc   = document.createElement('canvas');
+mc.width   = 1; mc.height = 1;
+const mctx = mc.getContext('2d');
+
+function measure(txt, weight, size, family) {
+  mctx.font = `${weight} ${size}px ${family}`;
+  return mctx.measureText(txt).width;
+}
+
+/* ── swatches ── */
+document.querySelectorAll('#swatchGrid .swatch').forEach(s => {
+  s.addEventListener('click', () => {
+    document.querySelectorAll('#swatchGrid .swatch').forEach(x => x.classList.remove('active'));
+    s.classList.add('active');
+    accentColor = s.dataset.color;
+    draw();
+  });
+});
+
+/* ── position toggle ── */
+document.getElementById('posLeft').addEventListener('click', () => {
+  badgeOnLeft = true;
+  document.getElementById('posLeft').classList.add('active');
+  document.getElementById('posRight').classList.remove('active');
+  draw();
+});
+document.getElementById('posRight').addEventListener('click', () => {
+  badgeOnLeft = false;
+  document.getElementById('posRight').classList.add('active');
+  document.getElementById('posLeft').classList.remove('active');
+  draw();
+});
+
+[nameInput, textInput].forEach(inp => inp.addEventListener('input', draw));
+
+/* ════════════════════════════════════
+   DRAW — all geometry in logical px,
+   canvas.width/height in physical px (×2),
+   drawn via a clean 2× transform.
+   ════════════════════════════════════ */
+function draw() {
+  const FAM = "'Inter',Helvetica,Arial,sans-serif";
+
+  /* clamp inputs to char limits */
+  const rawName = nameInput.value.slice(0, NAME_MAX).trim() || 'NAME';
+  const rawText = textInput.value.slice(0, TEXT_MAX).trim() || 'Hello!';
+
+  /* ── all sizes in logical px ── */
+  const DH  = 100;   /* dialog height    */
+  const DR  = 50;    /* dialog radius    */
+  const DFS = 40;    /* dialog font size */
+  const DPX = 56;    /* dialog x-padding */
+
+  const BH  = 68;    /* badge height     */
+  const BR  = 34;    /* badge radius     */
+  const BFS = 28;    /* badge font size  */
+  const BPX = 40;    /* badge x-padding  */
+
+  const OVL = 24;    /* badge↔dialog vertical overlap */
+  const INS = 28;    /* badge inset from dialog edge  */
+
+  /* widths computed from measured text — no transforms involved */
+  const DW = Math.round(Math.max(measure(rawText, '700', DFS, FAM) + DPX * 2, 140));
+  const BW = Math.round(Math.max(measure(rawName, '700', BFS, FAM) + BPX * 2,  BH));
+
+  /* ── figure out where the badge sits relative to the dialog bubble
+     (dialog's own left edge treated as x=0 for now) — the badge can
+     stick out past either edge of the dialog when BW is large, so the
+     canvas must be sized to whichever is the wider of the two shapes,
+     not just the dialog's width ── */
+  const dialogX0 = 0;
+  const badgeX0  = badgeOnLeft ? dialogX0 + INS : dialogX0 + DW - INS - BW;
+  const leftMost  = Math.min(dialogX0, badgeX0);
+  const rightMost = Math.max(dialogX0 + DW, badgeX0 + BW);
+  const contentW  = rightMost - leftMost;
+
+  /* canvas logical size */
+  const PAD_L = 20, PAD_R = 20;
+  const PAD_T = BH - OVL + 16;
+  const PAD_B = 20;
+  const LW = PAD_L + contentW + PAD_R;   /* logical width  */
+  const LH = PAD_T + DH + PAD_B;         /* logical height */
+
+  /* physical size (2×) — assigning .width auto-resets ctx transform to identity */
+  canvas.width  = LW * 2;
+  canvas.height = LH * 2;
+  /* only set width inline; height stays "auto" (per CSS) so the browser
+     scales it proportionally from the canvas's intrinsic W/H ratio when
+     the preview stage isn't wide enough — this is what stops long dialog
+     text from squashing the box's aspect ratio */
+  canvas.style.width  = LW + 'px';
+  canvas.style.height = '';
+
+  /* apply clean 2× scale — canvas.width assignment above guarantees identity base */
+  ctx.scale(2, 2);
+
+  /* clear in logical coords */
+  ctx.clearRect(0, 0, LW, LH);
+
+  /* ── positions (all logical) — shift everything so the leftmost
+     edge of either shape lands exactly at PAD_L, guaranteeing nothing
+     is ever clipped regardless of which shape is wider ── */
+  const shift = PAD_L - leftMost;
+  const dx = dialogX0 + shift;
+  const dy = PAD_T;
+  const bx = badgeX0 + shift;
+  const by = dy - (BH - OVL);
+
+  /* 1. dialog bubble */
+  ctx.save();
+  ctx.shadowColor   = 'rgba(0,0,0,0.30)';
+  ctx.shadowBlur    = 20;
+  ctx.shadowOffsetY = 7;
+  rrect(ctx, dx, dy, DW, DH, DR);
+  ctx.fillStyle = '#ffffff';
+  ctx.fill();
+  ctx.restore();
+
+  /* 2. speaker badge (painted on top) */
+  ctx.save();
+  ctx.shadowColor   = 'rgba(0,0,0,0.35)';
+  ctx.shadowBlur    = 14;
+  ctx.shadowOffsetY = 5;
+  rrect(ctx, bx, by, BW, BH, BR);
+  ctx.fillStyle = accentColor;
+  ctx.fill();
+  ctx.restore();
+
+  /* 3. dialog text */
+  ctx.textBaseline = 'middle';
+  ctx.textAlign    = 'center';
+  ctx.font         = `700 ${DFS}px ${FAM}`;
+  ctx.fillStyle    = '#111827';
+  ctx.fillText(rawText, dx + DW / 2, dy + DH / 2 + 1);
+
+  /* 4. badge text */
+  ctx.font      = `700 ${BFS}px ${FAM}`;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText(rawName, bx + BW / 2, by + BH / 2 + 1);
+
+  dimsTag.textContent = `${LW} × ${LH} px`;
+}
+
+/* ── download (3× = drawImage onto 3/2× of the 2× canvas) ── */
+document.getElementById('downloadBtn').addEventListener('click', () => {
+  const slug = (nameInput.value.trim() || 'dialog').toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const off  = document.createElement('canvas');
+  off.width  = canvas.width  * 3 / 2;
+  off.height = canvas.height * 3 / 2;
+  off.getContext('2d').drawImage(canvas, 0, 0, off.width, off.height);
+  const link     = document.createElement('a');
+  link.download  = `dialog-box-${slug}.png`;
+  link.href      = off.toDataURL('image/png');
+  link.click();
+});
+
+/* ── init ── */
+if (document.fonts) {
+  Promise.all([
+    document.fonts.load('700 40px Inter'),
+    document.fonts.load('700 28px Inter'),
+  ]).then(draw).catch(draw);
+} else {
+  draw();
+}
+window.addEventListener('load', draw);
+</script>
+</body>
+</html>
